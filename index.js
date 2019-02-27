@@ -21,7 +21,7 @@ const schema = gql`
     name: String,
     email: String,
     studentgroupId: String,
-    birthday : String,
+    birthday: String,
   }
 
   type Course {
@@ -46,8 +46,17 @@ type Mutation {
     studentgroupId: String,
     birthday : String
     )
-     : ItemCreatedResponse!
-  
+     
+    : ItemCreatedResponse!
+    updateStudent (
+      id: ID!,
+      name : String,
+      email: String,
+      studentgroupId: String,
+      birthday : String
+
+    ):ItemUpdatedResponse
+    
   createCourse(
      name: String,
      description: String,
@@ -180,15 +189,32 @@ const resolvers =
   Mutation: {
     createStudent: (parent, args, context, info) => {
         const student = {
-           id: ((students.length) + 1).toString(),
+            id: ((students.length) + 1).toString(),
             name: args.name,
-            email: args.email,
+             email: args.email,
             studentgroupId: args.studentgroupId,
-            birthday:args.birthday,
-            };
+             birthday:args.birthday,
+             };
         students.push(student);
-        return {success: true};
-    }
+        return {success: true}
+    },
+    updateStudent: (parent, args, context, info) => {
+      if (args.id) {
+        const student = students.find(s => s.id === +args.id);
+
+        if (student) {
+          student.name = args.name ? args.name : student.name;
+          student.email = args.email ? args.email : student.email;
+          student.studentgroupId = args.studentgroupId ? args.studentgroupId : student.studentgroupId;
+          student.birthday = args.birthday ? args.birthday : student.birthday;
+
+
+          return { success: true };
+        }
+
+      }
+      return { success: false }
+    },
     createCourse: (parent,args,context, info)=>{
       const course={
         id:((courses.length)+1).toString(),
