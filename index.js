@@ -24,6 +24,7 @@ const schema = gql`
     birthday: String,
   }
 
+  
   type Course {
     id: ID!,
     name: String,
@@ -31,12 +32,21 @@ const schema = gql`
     teacher: String,
   }
 
+  
   type Grade {
     id: ID!,
     studentid: ID,
     courseid: ID,
     grade: String,
   }
+  type ItemCreatedResponse{
+    success: Boolean!
+  }
+
+  type ItemupdatedResponse{
+    success: Boolean!
+  }
+
   
 
 type Mutation {
@@ -54,26 +64,42 @@ type Mutation {
       email: String,
       studentgroupId: String,
       birthday : String
+    )
+   :ItemupdatedResponse!
 
-    ):ItemUpdatedResponse
-    
-  createCourse(
+ 
+   
+    createCourse(
      name: String,
      description: String,
      teacher: String
   )
+  
   :ItemCreatedResponse!
+  updateCourse (
+    id: ID!
+    name: String,
+    description: String,
+    teacher: String,
+      ):ItemupdatedResponse! 
 
-  createGrade (
+
+ 
+      createGrade (
       studentid: ID,
       courseid: ID,
       grade: String
-  ) 
-  : ItemCreatedResponse!
+  ) : ItemCreatedResponse!
+      updateGrade(
+      id: ID!,
+      studentid: ID,
+      courseid: ID,
+      grade: String,
+    ): ItemupdatedResponse!
+
+   
 }
-type ItemCreatedResponse {
-  success: Boolean!
-}
+
 
 `;
 let s = 1;
@@ -183,8 +209,8 @@ const resolvers =
           return grades.filter(g => g.courseid === +args.courseid);
       }
     }
-  }
-};
+  
+},
   
   Mutation: {
     createStudent: (parent, args, context, info) => {
@@ -194,7 +220,7 @@ const resolvers =
              email: args.email,
             studentgroupId: args.studentgroupId,
              birthday:args.birthday,
-             };
+             }
         students.push(student);
         return {success: true}
     },
@@ -207,14 +233,14 @@ const resolvers =
           student.email = args.email ? args.email : student.email;
           student.studentgroupId = args.studentgroupId ? args.studentgroupId : student.studentgroupId;
           student.birthday = args.birthday ? args.birthday : student.birthday;
-
-
           return { success: true };
         }
 
       }
       return { success: false }
     },
+
+
     createCourse: (parent,args,context, info)=>{
       const course={
         id:((courses.length)+1).toString(),
@@ -225,8 +251,23 @@ const resolvers =
       courses.push(course);
       return{success:true};
   
-    }
-    createGrade: (parent, args, context, info) => {
+    },
+    updateCourse: (parent, args, context, info) => {
+      if (args.id) {
+          const course = courses.find(c => c.id === +args.id);
+          if (course) {
+            course.name = args.name ? args.name : course.name;
+              course.description = args.description ? args.description : course.description;
+              course.teacher = args.teacher ? args.teacher : course.teacher;
+            return {success: true};
+          }
+      }
+      return {success: false}
+  },
+   
+  
+  
+  createGrade: (parent, args, context, info) => {
       const grade = {
           id: ((grades.length) + 1),
           studentid: args.studentid,
@@ -235,9 +276,24 @@ const resolvers =
       };
       grades.push(grade);
       return {success: true}
+    },
+    updateGrade: (parent, args, context, info) => {
+      if (args.id) {
+          const grade = grades.find(g => g.id === +args.id);
+          if (grade) {
+              grade.studentid = args.studentid ? args.studentid : grade.studentid;
+              grade.courseid = args.courseid ? args.courseid : grade.courseid;
+              grade.grade = args.grade ? args.grade : grade.grade;
+              return {success: true}
+          }
+      }
+      return {success: false}
     }
-  
- };
+    
+      }
+    
+    };
+ 
     
     const server = new ApolloServer({
     typeDefs: schema,
